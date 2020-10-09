@@ -17,6 +17,10 @@ model_urls = {
     'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
 }
 
+def conv1x1(in_planes, out_planes, stride=1, has_bias=False):
+    "1x1 convolution with padding"
+    return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride,
+                     padding=0, bias=has_bias)
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
@@ -158,6 +162,11 @@ class ResNet(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
+        self.cls_conv = conv1x1(256,2)
+        self.link_conv = conv1x1(256,16)
+
+        self.upsample = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
@@ -213,7 +222,7 @@ class ResNet(nn.Module):
         c3 = self.latlayer2_relu(self.latlayer2_bn(c3))
         p3 = self._upsample_add(p4, c3)
         p3 = self.smooth2(p3)
-        p3 = self.smooth2_relu(self.smooth2_bn(p3))        
+        p3 = self.smooth2_relu(self.smooth2_bn(p3))
 
         c2 = self.latlayer3(c2)
         c2 = self.latlayer3_relu(self.latlayer3_bn(c2))
@@ -221,7 +230,9 @@ class ResNet(nn.Module):
         p2 = self.smooth3(p2)
         p2 = self.smooth3_relu(self.smooth3_bn(p2))
 
-        p3 = self._upsample(p3, p2)
+        #print(p2.shape, p3.shape, p4.shape, p5.shape)
+
+        '''p3 = self._upsample(p3, p2)
         p4 = self._upsample(p4, p2)
         p5 = self._upsample(p5, p2)
 
@@ -230,7 +241,19 @@ class ResNet(nn.Module):
         out = self.relu2(self.bn2(out))
         out = self.conv3(out)
         
-        return out
+        return out'''
+
+        score_4 = self.cls_conv(p4) + self.upsample(self.cls_conv(p5))
+        score_3 = self.cls_conv(p3) + self.upsample(score_4)
+        score_2 = self.cls_conv(p2) + self.upsample(score_3)
+        score_1 = self.upsample(score_2)
+
+        link_4 = self.link_conv(p4) + self.upsample(self.link_conv(p5))
+        link_3 = self.link_conv(p3) + self.upsample(link_4)
+        link_2 = self.link_conv(p2) + self.upsample(link_3)
+        link_1 = self.upsample(link_2)
+
+        return score_1, link_1
 
 
 def resnet18(pretrained=False, **kwargs):

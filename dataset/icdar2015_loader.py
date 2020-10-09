@@ -19,10 +19,10 @@ from pixel_link import cal_gt_for_single_image
 from .transfrom import build_transfrom
 
 ic15_root_dir = './data/icdar2015/'
-ic15_train_data_dir = ic15_root_dir + 'train_images/'
-ic15_train_gt_dir = ic15_root_dir + 'train_gts/'
+ic15_train_data_dir = ic15_root_dir + 'ch4_training_images/'
+ic15_train_gt_dir = ic15_root_dir + 'ch4_training_localization_transcription_gt/'
 ic15_test_data_dir = ic15_root_dir + 'ch4_test_images/'
-ic15_test_gt_dir = ic15_root_dir + 'ch4_test_images_gts/'
+ic15_test_gt_dir = ic15_root_dir + 'ch4_test_localization_transcription_gt/'
 
 random.seed(123456)
 
@@ -41,7 +41,7 @@ def get_bboxes(img, gt_path):
     bboxes = []
     tags = []
     for line in lines:
-        line = util.str.remove_all(line, '\xef\xbb\xbf')
+        line = util.str.remove_all(line.decode('utf-8-sig'), '\xef\xbb\xbf')
         line = util.str.remove_all(line, '\ufeff')
         gt = util.str.split(line, ',')
         if gt[-1][0] == '#':

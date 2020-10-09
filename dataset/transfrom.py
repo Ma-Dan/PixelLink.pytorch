@@ -4,10 +4,11 @@ import cv2
 import numpy as np
 import types
 from numpy import random
-from shapely.geometry import box, Polygon
+#from shapely.geometry import box, Polygon
 import math
 from .image_process import *
-from scipy.misc import imread, imresize
+#from scipy.misc import imread, imresize
+import imageio
 
 
 class Compose(object):
@@ -28,7 +29,7 @@ class Resize(object):
     def __call__(self, image, boxes=None, tags=None):
         ori_h, ori_w, _ = image.shape
 
-        new_image = imresize(image.copy(), (self.width, self.heigth))
+        new_image = imageio.imresize(image.copy(), (self.width, self.heigth))
         if boxes is not None:
             boxes[:, :, 0] *= self.width*1.0/ori_w
             boxes[:, :, 1] *= self.heigth*1.0/ori_h

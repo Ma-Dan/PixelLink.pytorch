@@ -19,6 +19,8 @@ from util import Logger, AverageMeter
 import time
 import util
 
+from torchsummary import summary
+
 def ohem_single(score, n_pos, neg_mask):
     if n_pos == 0:
         # selected_mask = gt_text.copy() * 0 # may be not good
@@ -106,6 +108,8 @@ def train(train_loader, model, criterion, optimizer, epoch,writer=None):
         # pixel_cls_logits = outputs[:, 0:2, :, :]
         # pixel_link_logits = outputs[:, 2:, :, :]
 
+        #print(imgs.shape)
+
         pixel_cls_logits,pixel_link_logits=model(imgs)
 
         pos_mask=(cls_label>0)
@@ -116,7 +120,8 @@ def train(train_loader, model, criterion, optimizer, epoch,writer=None):
 
         # dice_loss=criterion(pos_logits,pos_mask.to(torch.float),train_mask.to(torch.float))
         # for text class loss
-        pixel_cls_loss=F.cross_entropy(pixel_cls_logits,pos_mask.to(torch.long),reduce=False)
+        #print(pos_mask.shape, pixel_cls_logits.shape)
+        pixel_cls_loss=F.cross_entropy(pixel_cls_logits,pos_mask.to(torch.long),reduction='none')
         
         pixel_cls_scores=F.softmax(pixel_cls_logits,dim=1)
         pixel_neg_scores=pixel_cls_scores[:,0,:,:]
@@ -139,13 +144,13 @@ def train(train_loader, model, criterion, optimizer, epoch,writer=None):
             pixel_link_logits_flat=pixel_link_logits.contiguous().view(shape[0],2,8,shape[2],shape[3])
             link_label_flat=link_label
 
-            pixel_link_loss=F.cross_entropy(pixel_link_logits_flat,link_label_flat.to(torch.long),reduce=False)
+            pixel_link_loss=F.cross_entropy(pixel_link_logits_flat,link_label_flat.to(torch.long),reduction='none')
 
             def get_loss(label):
                 link_mask=(link_label_flat==label)
                 link_weight_mask=link_weight*link_mask.to(torch.float)
-                n_links=link_weight_mask.view(-1).sum()
-                loss=(pixel_link_loss*link_weight_mask).view(-1).sum()/n_links
+                n_links=link_weight_mask.contiguous().view(-1).sum()
+                loss=(pixel_link_loss*link_weight_mask).contiguous().view(-1).sum()/n_links
                 return loss
             
             neg_loss = get_loss(0)
@@ -243,7 +248,7 @@ def main(args):
         data_loader,
         batch_size=args.batch_size,
         shuffle=True,
-        num_workers=4,
+        num_workers=0,
         drop_last=False,
         pin_memory=True)
 
@@ -258,6 +263,8 @@ def main(args):
     
     model = torch.nn.DataParallel(model).cuda()
     model.train()
+
+    summary(model, (3, 640, 640))
 
     if hasattr(model.module, 'optimizer'):
         optimizer = model.module.optimizer
