@@ -260,6 +260,8 @@ def main(args):
         model = models.resnet152(pretrained=True, num_classes=kernel_num)
     elif args.arch == "vgg16":
         model = models.vgg16(pretrained=False,num_classes=kernel_num)
+    elif args.arch == "googlenet":
+        model = models.googlenet(pretrained=True,num_classes=kernel_num)
     
     model = torch.nn.DataParallel(model).cuda()
     model.train()

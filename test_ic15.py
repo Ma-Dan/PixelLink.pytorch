@@ -75,6 +75,8 @@ def test(args):
         model = models.resnet152(pretrained=True, num_classes=18, scale=args.scale)
     elif args.arch == "vgg16":
         model = models.vgg16(pretrained=True,num_classes=18)
+    elif args.arch == "googlenet":
+        model = models.googlenet(pretrained=True,num_classes=18)
     
     for param in model.parameters():
         param.requires_grad = False
