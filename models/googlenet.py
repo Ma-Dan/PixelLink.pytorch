@@ -281,7 +281,7 @@ class GoogLeNet(nn.Module):
 
     def forward(self, x):
         # type: (Tensor) -> GoogLeNetOutputs
-        #x = self._transform_input(x)
+        # x = self._transform_input(x)
         score_1, link_1 = self._forward(x)
         return score_1, link_1
 
