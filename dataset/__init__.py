@@ -5,3 +5,4 @@ from dataset.ctw1500_loader import CTW1500Loader
 from dataset.ctw1500_test_loader import CTW1500TestLoader
 
 from dataset.icdar2017_loader import IC17Loader
+from dataset.icdar2017_test_loader import IC17TestLoader
