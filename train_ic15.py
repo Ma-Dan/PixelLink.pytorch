@@ -272,7 +272,8 @@ def main(args):
         optimizer = model.module.optimizer
     else:
         # NOTE 这个地方的momentum对训练影响相当之大，使用0.99时训练crossentropy无法收敛.
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+        #optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     title = 'icdar2015'
     if args.pretrain:
@@ -300,7 +301,7 @@ def main(args):
         print(('\nEpoch: [%d | %d] LR: %f' % (epoch + 1, args.n_epoch, optimizer.param_groups[0]['lr'])))
 
         train_loss, train_te_acc, train_te_iou = train(train_loader, model, dice_loss, optimizer, epoch,writer)
-        if epoch %40==39:
+        if epoch % 4 == 3:
             save_checkpoint({
                     'epoch': epoch + 1,
                     'state_dict': model.state_dict(),
