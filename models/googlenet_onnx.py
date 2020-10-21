@@ -172,7 +172,7 @@ class GoogLeNet(nn.Module):
 
     def _upsample_add(self, x, y):
         _, _, H, W = y.size()
-        return F.upsample(x, size=(H, W), mode='bilinear') + y
+        return F.upsample(x, size=(H, W), mode='bilinear', align_corners=True) + y
 
     def _transform_input(self, x):
         # type: (Tensor) -> Tensor
